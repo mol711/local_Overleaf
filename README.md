@@ -59,11 +59,9 @@ docker buildx create --name classroom-builder --use
 docker buildx inspect --bootstrap
 
 # 3. 両対応ビルドとレジストリへの Push を実行（※処理には1〜2時間かかります）
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t <ご自身のDockerHubユーザー名>/sharelatex-japanese:v1.0 \
-  --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t mol0711/share-overleaf-japanese:v1.0 --push .
 ```
+上記を一行で実行してください。
 
 ---
 
@@ -75,7 +73,7 @@ PHASE 1 で作成した固定化イメージを参照する、インフラ定義
 services:
   sharelatex:
     # 教員が作成・Pushしたマルチプラットフォーム対応イメージを指定
-    image: <ご自身のDockerHubユーザー名>/sharelatex-japanese:v1.0
+    image: <ご自身のDockerHubユーザー名>/share-overleaf-japanese:v1.0
     container_name: sharelatex-classroom
     restart: always
     # 学生のPCで他のアプリと衝突を避けるため、Webアクセスポートを 8080 に設定
