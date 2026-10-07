@@ -1,0 +1,58 @@
+services:
+  sharelatex:
+    # 教員が作成・Pushしたマルチプラットフォーム対応イメージを指定
+    image: <教員から指定されたDockerHubユーザー名>/share-overleaf-japanese:v1.0
+    restart: always
+    # 学生のPCで他のアプリと衝突を避けるため、Webアクセスポートを 8080 に設定
+    ports:
+      - "8080:80"
+    links:
+      - mongo
+      - redis
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - OVERLEAF_APP_NAME=Local Overleaf Classroom
+      - OVERLEAF_MONGO_URL=mongodb://mongo/sharelatex
+      - OVERLEAF_REDIS_HOST=redis
+      - REDIS_HOST=redis
+    volumes:
+      - sharelatex_data:/var/lib/overleaf
+
+  mongo:
+    image: mongo:5.0
+    container_name: sharelatex-mongo
+    restart: always
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    expose:
+      - "27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init-replica.js:/docker-entrypoint-initdb.d/mongo-init-replica.js:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.hello().isWritablePrimary' | grep true"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:6.2
+    container_name: sharelatex-redis
+    restart: always
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  sharelatex_data:
+  mongo_data:
+  redis_data:
